@@ -24,7 +24,7 @@ export async function POST(request: Request) {
         Authorization: `Bearer ${OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "gpt-4-turbo", // Use appropriate model
+        model: "gpt-4o-mini", // Use appropriate model
         max_tokens: 4000,
         messages: [
           {

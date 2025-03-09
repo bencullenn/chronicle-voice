@@ -79,6 +79,7 @@ export async function POST(request: Request) {
       //     maxDurationSeconds: 300, // 5 minutes
       //     endCallPhrases: ['Thanks for the call, have a great day', 'goodbye'],
       // },
+      // assistantId: "a82442b3-01c0-44c6-aa48-9d84c05279d6",
       assistantId: "a7651967-ea3c-495e-ab15-b5c2775ec736",
       phoneNumberId: phoneNumberId,
       customer: {
