@@ -17,6 +17,7 @@ interface Entry {
   content: string;
   type: string;
   timestamp: string;
+  created_at: string;
   images: string[];
 }
 
@@ -44,13 +45,16 @@ export const ChronicleApp = () => {
             title:
               call.title ||
               `Call on ${new Date(call.timestamp).toLocaleDateString()}`,
-            date: new Date(call.timestamp).toLocaleDateString(),
+            date: new Date(
+              call.created_at || call.timestamp
+            ).toLocaleDateString(),
             content:
               call.cleanedTranscript ||
               call.transcript ||
               "No transcript available",
             type: "call",
             timestamp: call.timestamp,
+            created_at: call.created_at || call.timestamp,
             images: call.images || [],
           }));
 

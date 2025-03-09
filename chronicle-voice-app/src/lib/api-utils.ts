@@ -66,14 +66,34 @@ export async function fetchAndProcessCalls() {
       }
     }
 
-    // 4. Process the calls (including cleaning up with Anthropic)
-    // This is a simplified example - you might need to fetch transcripts from Supabase
-    // and process each one individually
+    // 4. Fetch all entries from Supabase to get accurate created_at dates
+    const entriesResponse = await fetch("/api/entries", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!entriesResponse.ok) {
+      throw new Error(`Failed to fetch entries: ${entriesResponse.status}`);
+    }
+
+    const entriesData = await entriesResponse.json();
+    const entriesMap = new Map();
+
+    if (entriesData.success && entriesData.entries) {
+      // Create a map of call_id to created_at date
+      entriesData.entries.forEach((entry: any) => {
+        entriesMap.set(entry.call_id, entry.created_at);
+      });
+    }
+
+    // 5. Process the calls (including cleaning up with OpenAI)
     const processedCalls = await Promise.all(
       callsData.calls.map(async (call: any) => {
         // Fetch the transcript from your database if needed
 
-        // Clean up with Anthropic if needed
+        // Clean up with OpenAI if needed
         // For demonstration, let's assume we clean up every transcript
         if (call.transcript) {
           const cleanResponse = await fetch("/api/anthropic/clean-transcript", {
@@ -81,13 +101,20 @@ export async function fetchAndProcessCalls() {
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ transcript: call.transcript }),
+            body: JSON.stringify({
+              transcript: call.transcript,
+              created_at:
+                entriesMap.get(call.id) ||
+                call.timestamp ||
+                new Date().toISOString(),
+            }),
           });
 
           if (cleanResponse.ok) {
             const cleanData = await cleanResponse.json();
             if (cleanData.success) {
               call.cleanedTranscript = cleanData.cleanedTranscript;
+              call.created_at = cleanData.created_at;
             }
           }
         }

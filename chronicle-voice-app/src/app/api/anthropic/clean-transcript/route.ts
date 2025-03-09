@@ -7,7 +7,7 @@ const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
 export async function POST(request: Request) {
   try {
     // 1. Get transcript data from request body
-    const { transcript } = await request.json();
+    const { transcript, created_at } = await request.json();
 
     if (!transcript) {
       return NextResponse.json(
@@ -49,6 +49,7 @@ ${transcript}`,
     return NextResponse.json({
       success: true,
       cleanedTranscript: cleanedData.choices[0].message.content,
+      created_at: created_at || new Date().toISOString(), // Return the created_at date or default to now
     });
   } catch (error) {
     console.error("Error cleaning transcript with OpenAI API:", error);

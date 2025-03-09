@@ -18,6 +18,7 @@ interface Entry {
   content: string;
   type: string;
   timestamp: string;
+  created_at: string;
   images: string[];
 }
 
