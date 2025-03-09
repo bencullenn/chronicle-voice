@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Header } from "@/components/header"
-import { JournalEntries } from "@/components/journal-entries"
-import { EntryPanel } from "@/components/entry-panel"
-import { useMobile } from "@/hooks/use-mobile"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft } from "lucide-react"
+import { useState } from "react";
+import { Header } from "@/components/header";
+import { JournalEntries } from "@/components/journal-entries";
+import { EntryPanel } from "@/components/entry-panel";
+import { useMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 // Sample journal entries data
 const sampleEntries = [
@@ -41,24 +41,34 @@ const sampleEntries = [
     timestamp: "08:45 PM",
     images: [],
   },
-]
+];
+
+interface Entry {
+  id: string;
+  title: string;
+  date: string;
+  content: string;
+  type: string;
+  timestamp: string;
+  images: string[];
+}
 
 export const ChronicleApp = () => {
-  const [selectedEntry, setSelectedEntry] = useState(null)
-  const [mode, setMode] = useState("Normal")
-  const isMobile = useMobile()
+  const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
+  const [mode, setMode] = useState("Normal");
+  const isMobile = useMobile();
 
-  const handleEntrySelect = (entry) => {
-    setSelectedEntry(entry)
-  }
+  const handleEntrySelect = (entry: Entry) => {
+    setSelectedEntry(entry);
+  };
 
-  const handleModeChange = (newMode) => {
-    setMode(newMode)
-  }
+  const handleModeChange = (newMode: string) => {
+    setMode(newMode);
+  };
 
   const handleBackToList = () => {
-    setSelectedEntry(null)
-  }
+    setSelectedEntry(null);
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -68,7 +78,11 @@ export const ChronicleApp = () => {
         {isMobile && selectedEntry ? (
           <div className="flex flex-col w-full h-full">
             <div className="p-4 border-b">
-              <Button variant="ghost" onClick={handleBackToList} className="mb-2">
+              <Button
+                variant="ghost"
+                onClick={handleBackToList}
+                className="mb-2"
+              >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to entries
               </Button>
@@ -80,12 +94,12 @@ export const ChronicleApp = () => {
             <div
               className={cn(
                 "flex-1 overflow-hidden transition-all duration-300",
-                selectedEntry && !isMobile ? "flex-[2]" : "flex-[3]",
+                selectedEntry && !isMobile ? "flex-[2]" : "flex-[3]"
               )}
             >
               <JournalEntries
                 entries={sampleEntries}
-                selectedEntryId={selectedEntry?.id}
+                selectedEntryId={selectedEntry?.id || null}
                 onEntrySelect={handleEntrySelect}
               />
             </div>
@@ -99,6 +113,5 @@ export const ChronicleApp = () => {
         )}
       </div>
     </div>
-  )
-}
-
+  );
+};
