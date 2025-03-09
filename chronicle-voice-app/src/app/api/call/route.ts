@@ -1,15 +1,20 @@
 import { NextResponse } from "next/server";
 
+// Assistant IDs
+const NORMAL_ASSISTANT_ID = "a7651967-ea3c-495e-ab15-b5c2775ec736";
+const SEVERANCE_ASSISTANT_ID = "a82442b3-01c0-44c6-aa48-9d84c05279d6";
+
 export async function POST(request: Request) {
   try {
     // Parse the request body
     const body = await request.json();
-    const { phoneNumber } = body;
+    const { phoneNumber, mode } = body;
 
     // Log the request (for debugging)
     console.log(
       "Backend received call request",
-      phoneNumber ? `to ${phoneNumber}` : "to default number"
+      phoneNumber ? `to ${phoneNumber}` : "to default number",
+      `with mode ${mode || "Normal"}`
     );
 
     // Get API key from environment variables
@@ -35,52 +40,18 @@ export async function POST(request: Request) {
 
     // Phone number ID to use for outbound call
     const phoneNumberId = process.env.VAPI_PHONE_NUMBER_ID;
-    //const voiceId = 'eleven_monolingual_v1'; // Example voice ID
 
-    // Simple system message for the assistant
-    /*const messages = [
-            {
-                role: "system",
-                content: "You are a helpful journal assistant. Ask the user about their day and help them reflect on it."
-            },
-            {
-                role: "assistant",
-                content: "Hi there! I'm your journal assistant. How was your day today?"
-            }
-        ];*/
+    // Select assistant ID based on mode
+    const assistantId =
+      mode === "Severance" ? SEVERANCE_ASSISTANT_ID : NORMAL_ASSISTANT_ID;
+
+    console.log(
+      `Using assistant ID: ${assistantId} for mode: ${mode || "Normal"}`
+    );
 
     // Prepare request to VAPI API
     const requestBody = {
-      // assistant: {
-      //     transcriber: {
-      //         provider: 'deepgram',
-      //         language: 'en',
-      //         model: 'nova-2'
-      //     },
-      //     model: {
-      //         provider: 'cerebras',
-      //         model: 'llama-3.3-70b',
-      //         maxTokens: 512,
-      //         temperature: 0.7,
-      //         messages: messages,
-      //     },
-      //     voice: {
-      //         provider: '11labs',
-      //         voiceId: voiceId,
-      //         model: 'eleven_turbo_v2_5',
-      //         stability: 0.3,
-      //         similarityBoost: 0.5,
-      //     },
-      //     name: 'Chronicle Journal Assistant',
-      //     firstMessageMode: 'assistant-speaks-first',
-      //     backgroundSound: 'office',
-      //     endCallMessage: 'Thank you for journaling today. Have a great day!',
-      //     silenceTimeoutSeconds: 30,
-      //     maxDurationSeconds: 300, // 5 minutes
-      //     endCallPhrases: ['Thanks for the call, have a great day', 'goodbye'],
-      // },
-      // assistantId: "a82442b3-01c0-44c6-aa48-9d84c05279d6",
-      assistantId: "a7651967-ea3c-495e-ab15-b5c2775ec736",
+      assistantId: assistantId,
       phoneNumberId: phoneNumberId,
       customer: {
         number: customerNumber,
@@ -116,6 +87,8 @@ export async function POST(request: Request) {
       callId: callData.id,
       status: callData.status,
       timestamp: new Date().toISOString(),
+      mode: mode || "Normal",
+      assistantId: assistantId,
     });
   } catch (error) {
     console.error("Error processing call request:", error);

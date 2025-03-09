@@ -1,20 +1,25 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Phone } from "lucide-react"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { cn } from "@/lib/utils"
-import { makeCall } from "@/lib/vapi-service"
+import { Button } from "@/components/ui/button";
+import { Phone } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
+import { makeCall } from "@/lib/vapi-service";
 
 interface HeaderProps {
-  mode: string
-  onModeChange: (mode: string) => void
+  mode: string;
+  onModeChange: (mode: string) => void;
 }
 
 export function Header({ mode, onModeChange }: HeaderProps) {
   const handleCallClick = async () => {
     try {
-      await makeCall();
+      await makeCall(undefined, mode);
     } catch (error) {
       console.error("Error making call:", error);
     }
@@ -36,15 +41,20 @@ export function Header({ mode, onModeChange }: HeaderProps) {
                 variant="outline"
                 className={cn(
                   "px-3 py-2 text-sm",
-                  mode === "Severance" && "bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100",
+                  mode === "Severance" &&
+                    "bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100"
                 )}
               >
                 {mode} <span className="ml-1.5">▼</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onModeChange("Normal")}>Normal</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onModeChange("Severance")}>Severance</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onModeChange("Normal")}>
+                Normal
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onModeChange("Severance")}>
+                Severance
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -55,6 +65,5 @@ export function Header({ mode, onModeChange }: HeaderProps) {
         </div>
       </div>
     </header>
-  )
+  );
 }
-
