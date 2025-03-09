@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Phone } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
+import { makeCall } from "@/lib/vapi-service"
 
 interface HeaderProps {
   mode: string
@@ -11,6 +12,14 @@ interface HeaderProps {
 }
 
 export function Header({ mode, onModeChange }: HeaderProps) {
+  const handleCallClick = async () => {
+    try {
+      await makeCall();
+    } catch (error) {
+      console.error("Error making call:", error);
+    }
+  };
+
   return (
     <header className="sticky top-0 z-10 w-full bg-background border-b border-border py-4 px-6">
       <div className="flex items-center justify-between">
@@ -39,7 +48,7 @@ export function Header({ mode, onModeChange }: HeaderProps) {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button className="shadow-md">
+          <Button className="shadow-md" onClick={handleCallClick}>
             <Phone className="h-4 w-4 mr-2" />
             Call Me
           </Button>
