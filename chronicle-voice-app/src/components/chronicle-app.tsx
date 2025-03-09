@@ -1,47 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Header } from "@/components/header";
-import { JournalEntries } from "@/components/journal-entries";
 import { EntryPanel } from "@/components/entry-panel";
+import { EntriesList } from "./entries-list";
 import { useMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-
-// Sample journal entries data
-const sampleEntries = [
-  {
-    id: "1",
-    title: "Morning Reflections",
-    date: "Mar 8, 2025",
-    content:
-      "Today I woke up feeling refreshed and motivated. The weather was perfect for a morning walk, which helped clear my mind and set a positive tone for the day. I've been thinking about the new project at work and have some creative ideas I want to explore further.",
-    type: "Daily",
-    timestamp: "09:15 AM",
-    images: [],
-  },
-  {
-    id: "2",
-    title: "Weekly Goals Review",
-    date: "Mar 5, 2025",
-    content:
-      "Looking back at this week's accomplishments, I'm pleased with the progress on most of my goals. The team meeting on Tuesday was particularly productive - we finalized the design for the new feature and set clear milestones for the coming month. Still need to work on time management for better work-life balance.",
-    type: "Weekly",
-    timestamp: "04:30 PM",
-    images: [],
-  },
-  {
-    id: "3",
-    title: "Trip Planning Thoughts",
-    date: "Mar 1, 2025",
-    content:
-      "Started researching destinations for the summer vacation. Currently considering either a coastal retreat or a mountain getaway. Budget considerations will be important, but I think we can make it work with careful planning. Need to check with everyone about their preferences and availability dates.",
-    type: "Personal",
-    timestamp: "08:45 PM",
-    images: [],
-  },
-];
+import { fetchAndProcessCalls } from "@/lib/api-utils";
 
 interface Entry {
   id: string;
@@ -57,6 +24,50 @@ export const ChronicleApp = () => {
   const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
   const [mode, setMode] = useState("Normal");
   const isMobile = useMobile();
+  const [entries, setEntries] = useState<Entry[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch entries when component mounts
+  useEffect(() => {
+    const fetchEntries = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const result = await fetchAndProcessCalls();
+
+        if (result.success && result.calls) {
+          // Transform calls into entries format
+          const transformedEntries = result.calls.map((call: any) => ({
+            id: call.id,
+            title:
+              call.title ||
+              `Call on ${new Date(call.timestamp).toLocaleDateString()}`,
+            date: new Date(call.timestamp).toLocaleDateString(),
+            content:
+              call.cleanedTranscript ||
+              call.transcript ||
+              "No transcript available",
+            type: "call",
+            timestamp: call.timestamp,
+            images: call.images || [],
+          }));
+
+          setEntries(transformedEntries);
+        } else {
+          setError(result.error || "Failed to fetch entries");
+        }
+      } catch (err) {
+        setError((err as Error).message);
+        console.error("Error fetching entries:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEntries();
+  }, []);
 
   const handleEntrySelect = (entry: Entry) => {
     setSelectedEntry(entry);
@@ -92,20 +103,21 @@ export const ChronicleApp = () => {
         ) : (
           <>
             <div
-              className={cn(
-                "flex-1 overflow-hidden transition-all duration-300",
-                selectedEntry && !isMobile ? "flex-[2]" : "flex-[3]"
-              )}
+              className={`h-full ${
+                selectedEntry && !isMobile ? "w-1/3" : "w-full"
+              } border-r`}
             >
-              <JournalEntries
-                entries={sampleEntries}
-                selectedEntryId={selectedEntry?.id || null}
+              <EntriesList
+                entries={entries}
                 onEntrySelect={handleEntrySelect}
+                selectedEntry={selectedEntry}
+                loading={loading}
+                error={error}
               />
             </div>
 
             {selectedEntry && !isMobile && (
-              <div className="flex-[1] border-l border-border bg-card overflow-auto">
+              <div className="w-2/3 h-full">
                 <EntryPanel entry={selectedEntry} />
               </div>
             )}
