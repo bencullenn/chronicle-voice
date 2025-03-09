@@ -1,12 +1,10 @@
 "use server";
 
-import { createClient } from "../../utils/supabase/server";
+import { supabase } from "@/utils/supabase";
 import { revalidatePath } from "next/cache";
 
 export async function uploadPhotos(files: File[], callId?: string) {
   try {
-    const supabase = createClient();
-
     // Upload each file to Supabase storage
     const uploadPromises = files.map(async (file) => {
       const fileExt = file.name.split(".").pop();

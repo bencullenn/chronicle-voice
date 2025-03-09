@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server";
+import { supabase } from "@/utils/supabase";
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,8 +13,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    const supabase = createClient();
 
     // Upload each file to Supabase storage
     const uploadPromises = files.map(async (file) => {

@@ -1,18 +1,21 @@
-import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import Image from "next/image";
 
 interface Entry {
-  id: string
-  title: string
-  date: string
-  content: string
-  type: string
-  timestamp: string
-  images: string[]
+  id: string;
+  title: string;
+  date: string;
+  content: string;
+  type: string;
+  timestamp: string;
+  images: string[];
 }
 
 interface EntryPanelProps {
-  entry: Entry
+  entry: Entry;
 }
 
 export function EntryPanel({ entry }: EntryPanelProps) {
@@ -25,20 +28,28 @@ export function EntryPanel({ entry }: EntryPanelProps) {
         </div>
 
         <div>
-          <h3 className="text-sm font-medium text-muted-foreground mb-2">Contents</h3>
+          <h3 className="text-sm font-medium text-muted-foreground mb-2">
+            Contents
+          </h3>
           <p className="text-sm whitespace-pre-wrap">{entry.content}</p>
         </div>
 
         <div>
-          <h3 className="text-sm font-medium text-muted-foreground mb-2">Images</h3>
+          <h3 className="text-sm font-medium text-muted-foreground mb-2">
+            Images
+          </h3>
           <div className="grid grid-cols-3 gap-3">
             {entry.images.length > 0
               ? entry.images.map((image, index) => (
-                  <div key={index} className="aspect-square bg-muted rounded-md overflow-hidden">
-                    <img
+                  <div
+                    key={index}
+                    className="aspect-square bg-muted rounded-md overflow-hidden relative"
+                  >
+                    <Image
                       src={image || "/placeholder.svg"}
                       alt={`Image ${index + 1}`}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
                     />
                   </div>
                 ))
@@ -48,7 +59,9 @@ export function EntryPanel({ entry }: EntryPanelProps) {
                     className="aspect-square bg-muted/50 rounded-md border border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-1"
                   >
                     <Plus className="h-4 w-4 text-muted-foreground/70" />
-                    <span className="text-xs text-muted-foreground/70">Add image</span>
+                    <span className="text-xs text-muted-foreground/70">
+                      Add image
+                    </span>
                   </div>
                 ))}
           </div>
@@ -60,6 +73,5 @@ export function EntryPanel({ entry }: EntryPanelProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }
-

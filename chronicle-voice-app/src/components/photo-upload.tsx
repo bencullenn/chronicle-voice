@@ -5,9 +5,9 @@ import type React from "react";
 import { useState } from "react";
 import { Upload, X, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { uploadPhotos } from "@/app/actions";
 import Image from "next/image";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/toast-provider";
+import { supabase } from "@/utils/supabase";
 
 interface PhotoUploadProps {
   callId: string;
@@ -40,50 +40,61 @@ export default function PhotoUpload({ callId }: PhotoUploadProps) {
   };
 
   const handleUpload = async () => {
-    if (selectedFiles.length === 0) {
-      toast({
-        title: "No files selected",
-        description: "Please select at least one photo to upload.",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (selectedFiles.length === 0) return;
 
     setIsUploading(true);
-    setUploadComplete(false);
-
     try {
-      const result = await uploadPhotos(selectedFiles, callId);
+      // Use the Supabase client directly
+      const uploadPromises = selectedFiles.map(async (file) => {
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${callId ? `call_${callId}_` : ""}${Math.random()
+          .toString(36)
+          .substring(2, 15)}_${Date.now()}.${fileExt}`;
 
-      if (result.success) {
-        setUploadComplete(true);
-        toast({
-          title: "Upload successful",
-          description: `${selectedFiles.length} photo${
-            selectedFiles.length > 1 ? "s" : ""
-          } uploaded successfully for call #${callId}.`,
-          variant: "default",
-        });
+        // Convert File to ArrayBuffer
+        const arrayBuffer = await file.arrayBuffer();
 
-        // Clean up previews and reset state after successful upload
-        previews.forEach((preview) => URL.revokeObjectURL(preview));
-        setSelectedFiles([]);
-        setPreviews([]);
+        // Upload to Supabase storage
+        const { data, error } = await supabase.storage
+          .from("photos")
+          .upload(fileName, arrayBuffer, {
+            contentType: file.type,
+            cacheControl: "3600",
+          });
 
-        // Reset upload complete status after a delay
-        setTimeout(() => setUploadComplete(false), 3000);
-      } else {
-        toast({
-          title: "Upload failed",
-          description:
-            result.error || "There was an error uploading your photos.",
-          variant: "destructive",
-        });
-      }
+        if (error) throw error;
+
+        // If callId is provided, save metadata in database
+        if (callId) {
+          const { error: dbError } = await supabase
+            .from("photo_metadata")
+            .insert({
+              path: data.path,
+              call_id: callId,
+              created_at: new Date().toISOString(),
+            });
+
+          if (dbError) console.error("Error saving photo metadata:", dbError);
+        }
+
+        return data.path;
+      });
+
+      await Promise.all(uploadPromises);
+
+      setUploadComplete(true);
+      toast({
+        title: "Upload successful",
+        description: `${selectedFiles.length} ${
+          selectedFiles.length === 1 ? "photo" : "photos"
+        } uploaded successfully`,
+      });
     } catch (error) {
+      console.error("Error uploading photos:", error);
       toast({
         title: "Upload failed",
-        description: "There was an error uploading your photos.",
+        description:
+          error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive",
       });
     } finally {

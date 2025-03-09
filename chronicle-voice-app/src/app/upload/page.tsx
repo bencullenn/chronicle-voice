@@ -32,7 +32,9 @@ export default function UploadPage() {
           <Input
             id="callId"
             value={callId}
-            onChange={(e) => setCallId(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setCallId(e.target.value)
+            }
             placeholder="Enter the call ID (e.g., 12345)"
             className="w-full"
             required
