@@ -40,23 +40,54 @@ export const ChronicleApp = () => {
 
         if (result.success && result.calls) {
           // Transform calls into entries format
-          const transformedEntries = result.calls.map((call: any) => ({
-            id: call.id,
-            title:
-              call.title ||
-              `Call on ${new Date(call.timestamp).toLocaleDateString()}`,
-            date: new Date(
-              call.created_at || call.timestamp
-            ).toLocaleDateString(),
-            content:
-              call.cleanedTranscript ||
-              call.transcript ||
-              "No transcript available",
-            type: "call",
-            timestamp: call.timestamp,
-            created_at: call.created_at || call.timestamp,
-            images: call.images || [],
-          }));
+          const transformedEntries = result.calls.map((call: any) => {
+            // Validate dates
+            const validateDate = (dateString: string) => {
+              if (!dateString) return null;
+              const date = new Date(dateString);
+              return !isNaN(date.getTime()) ? date : null;
+            };
+
+            // Use the most specific date available for each call
+            const createdAtDate = validateDate(call.created_at);
+            const timestampDate = validateDate(call.timestamp);
+
+            // Generate a unique fallback date if none is available
+            const generateFallbackDate = () => {
+              // Create a deterministic date offset based on call ID to ensure unique dates
+              const idHash = call.id
+                ? call.id
+                    .split("")
+                    .reduce(
+                      (acc: number, char: string) => acc + char.charCodeAt(0),
+                      0
+                    )
+                : 0;
+              const date = new Date();
+              date.setHours(date.getHours() - (idHash % 24));
+              date.setMinutes(date.getMinutes() - (idHash % 60));
+              return date;
+            };
+
+            const validDate =
+              createdAtDate || timestampDate || generateFallbackDate();
+            const displayDate = validDate.toLocaleDateString();
+
+            return {
+              id: call.id,
+              title: call.title || `Call on ${displayDate}`,
+              date: displayDate,
+              content:
+                call.cleanedTranscript ||
+                call.transcript ||
+                "No transcript available",
+              type: "call",
+              timestamp: validDate.toISOString(),
+              created_at:
+                call.created_at || call.timestamp || validDate.toISOString(),
+              images: call.images || [],
+            };
+          });
 
           setEntries(transformedEntries);
         } else {

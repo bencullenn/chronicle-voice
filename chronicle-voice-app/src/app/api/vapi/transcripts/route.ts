@@ -35,11 +35,20 @@ export async function POST(request: Request) {
           const call = await vapi.calls.get(callId);
           const transcriptData = call.artifact?.transcript;
 
+          // Use the original call creation time if available, otherwise use current time
+          let created_at = new Date().toISOString();
+          if (call.createdAt) {
+            const timestamp = new Date(call.createdAt);
+            if (!isNaN(timestamp.getTime())) {
+              created_at = timestamp.toISOString();
+            }
+          }
+
           // 2.2 Store in Supabase
           const { error } = await supabase.from("entry").upsert({
             call_id: callId,
             transcript: transcriptData,
-            created_at: new Date().toISOString(),
+            created_at: created_at,
           });
 
           if (error) {

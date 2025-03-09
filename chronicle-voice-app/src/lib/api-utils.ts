@@ -91,11 +91,68 @@ export async function fetchAndProcessCalls() {
     // 5. Process the calls (including cleaning up with OpenAI)
     const processedCalls = await Promise.all(
       callsData.calls.map(async (call: any) => {
-        // Fetch the transcript from your database if needed
+        // Normalize timestamp if it exists but isn't a valid date
+        if (!call.timestamp) {
+          // If no timestamp exists at all, try to extract one from createdAt or other fields
+          if (call.createdAt) {
+            const createdDate = new Date(call.createdAt);
+            if (!isNaN(createdDate.getTime())) {
+              call.timestamp = createdDate.toISOString();
+            }
+          } else if (call.startedAt) {
+            const startedDate = new Date(call.startedAt);
+            if (!isNaN(startedDate.getTime())) {
+              call.timestamp = startedDate.toISOString();
+            }
+          } else if (call.endedAt) {
+            const endedDate = new Date(call.endedAt);
+            if (!isNaN(endedDate.getTime())) {
+              call.timestamp = endedDate.toISOString();
+            }
+          } else {
+            // Last resort: Create a unique-ish timestamp by offsetting current time by call id hash
+            // This ensures at least different calls get different timestamps
+            const idHash = call.id
+              .split("")
+              .reduce(
+                (acc: number, char: string) => acc + char.charCodeAt(0),
+                0
+              );
+            const date = new Date();
+            date.setMinutes(date.getMinutes() - (idHash % 1000)); // Offset by hash value
+            call.timestamp = date.toISOString();
+            console.warn(
+              `No valid timestamp for call ${call.id}, created artificial offset timestamp`
+            );
+          }
+        } else {
+          // Try to ensure existing timestamp is a valid ISO string
+          const date = new Date(call.timestamp);
+          if (!isNaN(date.getTime())) {
+            call.timestamp = date.toISOString();
+          } else {
+            // If it's invalid, create an offset timestamp based on call id
+            const idHash = call.id
+              .split("")
+              .reduce(
+                (acc: number, char: string) => acc + char.charCodeAt(0),
+                0
+              );
+            const date = new Date();
+            date.setMinutes(date.getMinutes() - (idHash % 1000)); // Offset by hash value
+            call.timestamp = date.toISOString();
+            console.warn(
+              `Invalid timestamp for call ${call.id}, created artificial offset timestamp`
+            );
+          }
+        }
 
         // Clean up with OpenAI if needed
         // For demonstration, let's assume we clean up every transcript
         if (call.transcript) {
+          // Get created_at from Supabase or use the timestamp
+          const created_at = entriesMap.get(call.id) || call.timestamp;
+
           const cleanResponse = await fetch("/api/anthropic/clean-transcript", {
             method: "POST",
             headers: {
@@ -103,10 +160,7 @@ export async function fetchAndProcessCalls() {
             },
             body: JSON.stringify({
               transcript: call.transcript,
-              created_at:
-                entriesMap.get(call.id) ||
-                call.timestamp ||
-                new Date().toISOString(),
+              created_at: created_at,
             }),
           });
 

@@ -48,6 +48,26 @@ export function JournalEntries({
     return content.length > 150 ? `${content.substring(0, 150)}...` : content;
   };
 
+  // Format timestamp function
+  const formatTimestamp = (timestamp: string): string => {
+    try {
+      const date = new Date(timestamp);
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return "Unknown time";
+      }
+
+      // Format as "10:30 AM" time string
+      return date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch (error) {
+      console.warn("Error formatting timestamp:", error);
+      return "Unknown time";
+    }
+  };
+
   return (
     <div className="h-full overflow-auto p-6 space-y-4">
       <AnimatePresence>
@@ -121,7 +141,7 @@ export function JournalEntries({
 
               <CardFooter className="pt-2 text-xs text-muted-foreground flex justify-between">
                 <span>{entry.type}</span>
-                <span>{entry.timestamp}</span>
+                <span>{formatTimestamp(entry.timestamp)}</span>
               </CardFooter>
             </Card>
           </motion.div>

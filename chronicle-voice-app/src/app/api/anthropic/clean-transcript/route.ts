@@ -4,6 +4,21 @@ import { NextResponse } from "next/server";
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
 
+// Helper function to validate and normalize dates
+function validateDate(dateString: string | undefined | null): string {
+  if (!dateString) {
+    return new Date().toISOString();
+  }
+
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) {
+    console.warn(`Invalid date: ${dateString}, using current time`);
+    return new Date().toISOString();
+  }
+
+  return date.toISOString();
+}
+
 export async function POST(request: Request) {
   try {
     // 1. Get transcript data from request body
@@ -15,6 +30,9 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    // Validate and normalize the created_at date
+    const validatedCreatedAt = validateDate(created_at);
 
     // 2. Call OpenAI API to clean up the transcript
     const response = await fetch(OPENAI_API_URL, {
@@ -49,7 +67,7 @@ ${transcript}`,
     return NextResponse.json({
       success: true,
       cleanedTranscript: cleanedData.choices[0].message.content,
-      created_at: created_at || new Date().toISOString(), // Return the created_at date or default to now
+      created_at: validatedCreatedAt, // Always return a valid date
     });
   } catch (error) {
     console.error("Error cleaning transcript with OpenAI API:", error);

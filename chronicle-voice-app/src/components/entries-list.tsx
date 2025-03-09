@@ -32,6 +32,26 @@ export const EntriesList = ({
 }: EntriesListProps) => {
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Format timestamp function
+  const formatTimestamp = (timestamp: string): string => {
+    try {
+      const date = new Date(timestamp);
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return "Unknown time";
+      }
+
+      // Format as "10:30 AM" time string
+      return date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch (error) {
+      console.warn("Error formatting timestamp:", error);
+      return "Unknown time";
+    }
+  };
+
   // Filter entries based on search term
   const filteredEntries = entries.filter((entry) => {
     const searchLower = searchTerm.toLowerCase();
@@ -107,7 +127,7 @@ export const EntriesList = ({
                     {entry.type}
                   </span>
                   <span className="text-xs text-muted-foreground ml-2">
-                    {entry.timestamp}
+                    {formatTimestamp(entry.timestamp)}
                   </span>
                 </div>
               </li>
